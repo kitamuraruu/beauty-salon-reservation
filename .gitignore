@@ -1,0 +1,17 @@
+# CodeIgniter 4
+writable/logs/*
+writable/session/*
+writable/cache/*
+writable/uploads/*
+vendor/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
