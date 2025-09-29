@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>管理者ダッシュボード</title>
+    <link rel="stylesheet" href="<?= base_url('css/style.css') ?>">
 </head>
 <body>
-    <h1>管理画面</h1>
-    <h2>管理メニュー</h2>
-    <p>
-        <a href="<?= base_url('admin/appointments') ?>" style="margin-right: 10px;">予約一覧</a>
-        <a href="<?= base_url('admin/menus') ?>">メニュー管理</a>
-    </p>
-    <a href="<?= base_url('logout') ?>">ログアウト</a>
+    <div class="container">
+        <h1>管理画面</h1>
+        <a href="<?= base_url('logout') ?>" class="logout-btn">ログアウト</a>
+        <div class="nav">
+            <a href="<?= base_url('admin/appointments') ?>">予約一覧</a>
+            <a href="<?= base_url('admin/menus') ?>">メニュー管理</a>
+        </div>
+    </div>
 </body>
 </html>

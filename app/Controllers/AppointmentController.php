@@ -43,27 +43,20 @@ class AppointmentController extends BaseController
             $model = new \App\Models\AppointmentModel();
             $result = $model->saveAppointment($data);
             
-            // 結果を表示
             if ($result) {
-                // 選択されたメニュー情報を取得
-                $menuModel = new \App\Models\MenuModel();
-                $selectedMenu = $menuModel->getMenuById($data['menu_id']);
-                
-                echo "予約が完了しました！<br>";
-                echo "お名前: " . $data['name'] . "<br>";
-                echo "予約日: " . $data['appointment_date'] . "<br>";
-                echo "予約時間: " . $data['appointment_time'] . "<br>";
-                echo "電話番号: " . $data['phone'] . "<br>";
-                if ($selectedMenu) {
-                    echo "メニュー: " . $selectedMenu['name'] . " - ¥" . number_format($selectedMenu['price']) . "<br>";
-                }
-                echo "<br><a href='" . base_url('appointment') . "'>新しい予約をする</a>";
+                // 成功メッセージをセッションに保存
+                session()->setFlashdata('success', '予約が登録されました');
             } else {
-                echo "予約の保存に失敗しました。";
+                // エラーメッセージをセッションに保存
+                session()->setFlashdata('error', '予約の保存に失敗しました');
             }
         } catch (Exception $e) {
-            echo "エラーが発生しました: " . $e->getMessage();
+            // エラーメッセージをセッションに保存
+            session()->setFlashdata('error', 'エラーが発生しました: ' . $e->getMessage());
         }
+        
+        // 予約フォームページにリダイレクト
+        return redirect()->to('/appointment');
     }
     
     /**
