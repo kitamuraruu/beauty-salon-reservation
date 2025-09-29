@@ -53,15 +53,52 @@ class AdminController extends BaseController
             return redirect()->to('/login');
         }
         
-        // 管理者ダッシュボード（予約一覧）
-        $model = new \App\Models\AppointmentModel();
-        $appointments = $model->findAll();
+        // 管理者権限を確認
+        if (!$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        // 管理者ダッシュボード（メインページ）
+        return view('admin_dashboard');
+    }
+    
+    /**
+     * 予約一覧表示
+     */
+    public function appointments()
+    {
+        // ログイン状態を確認
+        if (!$this->checkLogin()) {
+            return redirect()->to('/login');
+        }
+        
+        // 管理者権限を確認
+        if (!$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        // 予約一覧を取得（メニュー情報も含める）
+        $appointmentModel = new \App\Models\AppointmentModel();
+        $menuModel = new \App\Models\MenuModel();
+        
+        $appointments = $appointmentModel->findAll();
+        
+        // 各予約にメニュー情報を追加
+        foreach ($appointments as &$appointment) {
+            if ($appointment['menu_id']) {
+                $menu = $menuModel->getMenuById($appointment['menu_id']);
+                if ($menu) {
+                    $appointment['menu_name'] = $menu['name'];
+                    $appointment['menu_price'] = $menu['price'];
+                }
+            }
+        }
         
         $data = [
             'appointments' => $appointments
         ];
         
-        return view('admin_dashboard', $data);
+        return view('admin_appointments', $data);
     }
     
     /**
@@ -94,6 +131,165 @@ class AdminController extends BaseController
     {
         $session = session();
         return $session->get('user_type') === 'admin';
+    }
+    
+    /**
+     * メニュー一覧表示
+     */
+    public function menus()
+    {
+        // ログイン状態と管理者権限を確認
+        if (!$this->checkLogin() || !$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        $menuModel = new \App\Models\MenuModel();
+        $menus = $menuModel->getAllMenus();
+        
+        $data = [
+            'menus' => $menus ?: []
+        ];
+        
+        return view('admin_menus', $data);
+    }
+    
+    /**
+     * メニュー追加フォーム表示
+     */
+    public function createMenu()
+    {
+        // ログイン状態と管理者権限を確認
+        if (!$this->checkLogin() || !$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        return view('admin_menu_form');
+    }
+    
+    /**
+     * メニュー保存処理
+     */
+    public function saveMenu()
+    {
+        // ログイン状態と管理者権限を確認
+        if (!$this->checkLogin() || !$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        // フォームデータを取得
+        $data = [
+            'name' => $this->request->getPost('name'),
+            'price' => $this->request->getPost('price')
+        ];
+        
+        // バリデーション
+        if (empty($data['name']) || empty($data['price'])) {
+            return redirect()->back()->with('error', 'メニュー名と価格を入力してください');
+        }
+        
+        if (!is_numeric($data['price']) || $data['price'] < 0) {
+            return redirect()->back()->with('error', '価格は0以上の数値を入力してください');
+        }
+        
+        try {
+            $menuModel = new \App\Models\MenuModel();
+            $result = $menuModel->saveMenu($data);
+            
+            if ($result) {
+                return redirect()->to('/admin/menus')->with('success', 'メニューを追加しました');
+            } else {
+                return redirect()->back()->with('error', 'メニューの保存に失敗しました');
+            }
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'エラーが発生しました: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * メニュー編集フォーム表示
+     */
+    public function editMenu($id)
+    {
+        // ログイン状態と管理者権限を確認
+        if (!$this->checkLogin() || !$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        $menuModel = new \App\Models\MenuModel();
+        $menu = $menuModel->getMenuById($id);
+        
+        if (!$menu) {
+            return redirect()->to('/admin/menus')->with('error', 'メニューが見つかりません');
+        }
+        
+        $data = [
+            'menu' => $menu
+        ];
+        
+        return view('admin_menu_edit', $data);
+    }
+    
+    /**
+     * メニュー更新処理
+     */
+    public function updateMenu($id)
+    {
+        // ログイン状態と管理者権限を確認
+        if (!$this->checkLogin() || !$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        // フォームデータを取得
+        $data = [
+            'name' => $this->request->getPost('name'),
+            'price' => $this->request->getPost('price')
+        ];
+        
+        // バリデーション
+        if (empty($data['name']) || empty($data['price'])) {
+            return redirect()->back()->with('error', 'メニュー名と価格を入力してください');
+        }
+        
+        if (!is_numeric($data['price']) || $data['price'] < 0) {
+            return redirect()->back()->with('error', '価格は0以上の数値を入力してください');
+        }
+        
+        try {
+            $menuModel = new \App\Models\MenuModel();
+            $result = $menuModel->updateMenu($id, $data);
+            
+            if ($result) {
+                return redirect()->to('/admin/menus')->with('success', 'メニューを更新しました');
+            } else {
+                return redirect()->back()->with('error', 'メニューの更新に失敗しました');
+            }
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'エラーが発生しました: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * メニュー削除処理
+     */
+    public function deleteMenu($id)
+    {
+        // ログイン状態と管理者権限を確認
+        if (!$this->checkLogin() || !$this->checkAdmin()) {
+            return redirect()->to('/login');
+        }
+        
+        try {
+            $menuModel = new \App\Models\MenuModel();
+            $result = $menuModel->deleteMenu($id);
+            
+            if ($result) {
+                return redirect()->to('/admin/menus')->with('success', 'メニューを削除しました');
+            } else {
+                return redirect()->to('/admin/menus')->with('error', 'メニューの削除に失敗しました');
+            }
+        } catch (Exception $e) {
+            return redirect()->to('/admin/menus')->with('error', 'エラーが発生しました: ' . $e->getMessage());
+        }
     }
     
 }

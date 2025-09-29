@@ -36,6 +36,6 @@
     </form>
     
     <hr>
-    <p>テスト用: ID=admin（管理者）, ID=user（一般ユーザー）, パスワード=IDと同様</p>
+    <p>テスト用: ID=admin（管理者）, ID=user（一般ユーザー）, パスワード=ID+123</p>
 </body>
 </html>

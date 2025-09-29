@@ -11,7 +11,15 @@ class AppointmentController extends BaseController
             return redirect()->to('/login');
         }
         
-        return view('appointment_form');
+        // メニューデータを取得
+        $menuModel = new \App\Models\MenuModel();
+        $menus = $menuModel->getAllMenus();
+        
+        $data = [
+            'menus' => $menus ?: []
+        ];
+        
+        return view('appointment_form', $data);
     }
     
     public function save()
@@ -26,7 +34,8 @@ class AppointmentController extends BaseController
             'name' => $this->request->getPost('name'),
             'appointment_date' => $this->request->getPost('appointment_date'),
             'appointment_time' => $this->request->getPost('appointment_time'),
-            'phone' => $this->request->getPost('phone')
+            'phone' => $this->request->getPost('phone'),
+            'menu_id' => $this->request->getPost('menu_id')
         ];
         
         try {
@@ -36,12 +45,19 @@ class AppointmentController extends BaseController
             
             // 結果を表示
             if ($result) {
+                // 選択されたメニュー情報を取得
+                $menuModel = new \App\Models\MenuModel();
+                $selectedMenu = $menuModel->getMenuById($data['menu_id']);
+                
                 echo "予約が完了しました！<br>";
                 echo "お名前: " . $data['name'] . "<br>";
                 echo "予約日: " . $data['appointment_date'] . "<br>";
                 echo "予約時間: " . $data['appointment_time'] . "<br>";
                 echo "電話番号: " . $data['phone'] . "<br>";
-                echo "<br><a href='appointment'>新しい予約をする</a>";
+                if ($selectedMenu) {
+                    echo "メニュー: " . $selectedMenu['name'] . " - ¥" . number_format($selectedMenu['price']) . "<br>";
+                }
+                echo "<br><a href='" . base_url('appointment') . "'>新しい予約をする</a>";
             } else {
                 echo "予約の保存に失敗しました。";
             }
